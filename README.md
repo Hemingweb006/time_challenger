@@ -1,4 +1,4 @@
-# Time Challenger — by Synaptic
+# Time Challenger - by Synaptic
 
 > **Beat the artificial intelligence predictions. Our best adversary is ourselves.**
 
