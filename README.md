@@ -1,5 +1,5 @@
 # Time Challenger - by Synaptic
-[https://github.com/Hemingweb006/time_challenger/video.mov](https://github.com/Hemingweb006/time_challenger/blob/main/video.mov)
+[https://github.com/Hemingweb006/time_challenger/video.mp4](https://github.com/Hemingweb006/time_challenger/blob/main/video.mp4)
 > **Beat the artificial intelligence predictions. Our best adversary is ourselves.**
 
 Time Challenger is a gamified productivity web application that uses Google's time-series forecasting model, **TimesFM 2.5**, to predict your daily work hours. Your mission is to exceed the AI expectations every day.
