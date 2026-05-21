@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Challenger by Synaptic - Beat the AI Expectation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="glow-bg glow-1"></div>
+    <div class="glow-bg glow-2"></div>
+
+    <div id="app" class="app-container">
+
+        <section id="view-landing" class="view active">
+            <div class="landing-card glass-panel">
+                <div class="brand-badge neon-text-green">
+                    <span class="pulse-dot"></span> SYNAPTIC
+                </div>
+                <h1 class="brand-title">TIME CHALLENGER</h1>
+                <p class="brand-tagline">
+                    Challenge your personal limits. Track your daily focus time, let our time-series artificial intelligence predict your future productivity, and beat the expectations to win.
+                </p>
+                <div class="concept-grid">
+                    <div class="concept-item">
+                        <div class="concept-icon"><i data-lucide="eye"></i></div>
+                        <h3>1. Live Tracking</h3>
+                        <p>Track your active work hours in real-time. No manual logging allowed to prevent cheating.</p>
+                    </div>
+                    <div class="concept-item">
+                        <div class="concept-icon"><i data-lucide="brain"></i></div>
+                        <h3>2. AI Prediction</h3>
+                        <p>Google's TimesFM model analyzes your history and predicts your target work hours for the day.</p>
+                    </div>
+                    <div class="concept-item">
+                        <div class="concept-icon"><i data-lucide="swords"></i></div>
+                        <h3>3. The Battle</h3>
+                        <p>Surpass the AI's predicted hours. Your focus time is auto-submitted at midnight (00:00).</p>
+                    </div>
+                </div>
+                <button id="btn-start" class="btn-primary neon-btn">
+                    <span>Start the Challenge</span> <i data-lucide="arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="view-setup" class="view">
+            <div class="setup-card glass-panel">
+                <div class="back-nav">
+                    <button class="btn-text btn-back-landing"><i data-lucide="chevron-left"></i> Back</button>
+                </div>
+                <h2 class="section-title text-center">Define Your Work Habits</h2>
+                <p class="section-subtitle text-center">
+                    Enter your typical daily work hour range. We will generate 30 days of historical focus data using a normal distribution $N(\mu, \sigma)$ to calibrate the Google TimesFM forecaster.
+                </p>
+
+                <div class="sliders-container">
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span class="slider-label"><i data-lucide="battery"></i> Daily Minimum</span>
+                            <span id="val-min-hours" class="slider-val text-green">4.0 h</span>
+                        </div>
+                        <input type="range" id="input-min-hours" min="0.5" max="12.0" step="0.5" value="4.0" class="neon-slider">
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span class="slider-label"><i data-lucide="battery-charging"></i> Daily Maximum</span>
+                            <span id="val-max-hours" class="slider-val text-green">8.0 h</span>
+                        </div>
+                        <input type="range" id="input-max-hours" min="4.0" max="20.0" step="0.5" value="8.0" class="neon-slider">
+                    </div>
+                </div>
+
+                <div class="simulation-preview">
+                    <h4>Preview of your generated historical focus data:</h4>
+                    <div class="preview-bars" id="preview-bars">
+                    </div>
+                    <div class="preview-footer">
+                        <span>30 days of initial history</span>
+                        <span id="preview-stats">Expected Mean: ~6.0h / Std Dev: ~1.0h</span>
+                    </div>
+                </div>
+
+                <button id="btn-generate" class="btn-primary btn-full neon-btn">
+                    <span>Generate Profile & Calibrate AI</span> <i data-lucide="activity"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="view-dashboard" class="view">
+            <header class="app-header">
+                <div class="brand">
+                    <span class="neon-text-green font-bold tracking-wider"><i data-lucide="swords" class="inline-block mr-1"></i> SYNAPTIC</span>
+                    <span class="header-divider">|</span>
+                    <span class="project-name">TIME CHALLENGER</span>
+                </div>
+                <div class="header-actions">
+                    <button id="btn-reset-profile" class="btn-danger-glass" title="Reset all data and start over">
+                        <i data-lucide="refresh-cw"></i> Reset Profile
+                    </button>
+                </div>
+            </header>
+
+            <div class="metrics-grid">
+                <div class="metric-card glass-panel">
+                    <div class="metric-icon metric-purple"><i data-lucide="flame"></i></div>
+                    <div class="metric-content">
+                        <h4>Logging Streak</h4>
+                        <div class="metric-value" id="stat-logging-streak">0 days</div>
+                        <p class="metric-desc" id="stat-victory-streak">Victory Streak: 0</p>
+                    </div>
+                </div>
+                <div class="metric-card glass-panel highlight-neon">
+                    <div class="metric-icon metric-green"><i data-lucide="brain"></i></div>
+                    <div class="metric-content">
+                        <h4>Today's AI Target</h4>
+                        <div class="metric-value text-green" id="stat-today-target">-- h</div>
+                        <p class="metric-desc">Work target to beat today</p>
+                    </div>
+                </div>
+                <div class="metric-card glass-panel">
+                    <div class="metric-icon metric-blue"><i data-lucide="history"></i></div>
+                    <div class="metric-content">
+                        <h4>Yesterday's Result</h4>
+                        <div class="metric-value" id="stat-yesterday-status">--</div>
+                        <p class="metric-desc" id="stat-yesterday-detail">Awaiting midnight log</p>
+                    </div>
+                </div>
+                <div class="metric-card glass-panel">
+                    <div class="metric-icon metric-yellow"><i data-lucide="trending-up"></i></div>
+                    <div class="metric-content">
+                        <h4>Daily Average</h4>
+                        <div class="metric-value" id="stat-average-hours">-- h</div>
+                        <p class="metric-desc" id="stat-total-logged">Total Focus: -- h</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card glass-panel">
+                <div class="chart-header">
+                    <h3><i data-lucide="area-chart"></i> Focus History & AI Forecast</h3>
+                    <div class="chart-legend">
+                        <span class="legend-item"><span class="legend-color color-actual"></span> Actual / Simulated</span>
+                        <span class="legend-item"><span class="legend-color color-forecast"></span> AI Prediction (TimesFM)</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="timeSeriesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="arena-cta-banner neon-border">
+                <div class="banner-glow"></div>
+                <div class="banner-body">
+                    <h2>Ready to beat the AI's expectations?</h2>
+                    <p>Enter the concentration arena, launch your focus timers, and watch your metrics climb. Today's progress is auto-saved at 00:00.</p>
+                </div>
+                <button id="btn-enter-arena" class="btn-primary neon-btn">
+                    <span>Enter the Arena</span> <i data-lucide="swords"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="view-arena" class="view">
+            <div class="arena-header">
+                <button id="btn-back-dashboard" class="btn-secondary-glass">
+                    <i data-lucide="arrow-left"></i> Dashboard
+                </button>
+                <div class="brand">
+                    <span class="neon-text-green font-bold"><i data-lucide="swords"></i> THE FOCUS ARENA</span>
+                </div>
+            </div>
+
+            <div class="arena-grid">
+                <div class="arena-main-column">
+                    
+                    <div class="timer-suite glass-panel">
+                        <div class="suite-tabs">
+                            <button class="tab-btn active" data-tab="pomodoro"><i data-lucide="hourglass"></i> Pomodoro</button>
+                            <button class="tab-btn" data-tab="stopwatch"><i data-lucide="timer"></i> Stopwatch</button>
+                        </div>
+
+                        <div id="tab-content-pomodoro" class="tab-content active">
+                            <div class="pomodoro-presets">
+                                <button class="preset-btn active" data-time="25" data-mode="focus">Work (25m)</button>
+                                <button class="preset-btn" data-time="5" data-mode="short-break">Short Break (5m)</button>
+                                <button class="preset-btn" data-time="15" data-mode="long-break">Long Break (15m)</button>
+                            </div>
+                            
+                            <div class="timer-display-container">
+                                <svg class="progress-ring" width="220" height="220">
+                                    <circle class="progress-ring__circle-bg" stroke="rgba(255, 255, 255, 0.05)" stroke-width="8" fill="transparent" r="95" cx="110" cy="110"/>
+                                    <circle class="progress-ring__circle" stroke="#00ff66" stroke-width="8" fill="transparent" r="95" cx="110" cy="110" id="pomodoro-circle"/>
+                                </svg>
+                                <div class="timer-digits" id="pomodoro-time">25:00</div>
+                                <div class="timer-status" id="pomodoro-status-text">Ready to Focus</div>
+                            </div>
+
+                            <div class="timer-controls">
+                                <button id="btn-pomodoro-play" class="btn-control play" title="Start"><i data-lucide="play"></i></button>
+                                <button id="btn-pomodoro-pause" class="btn-control pause" title="Pause" style="display:none;"><i data-lucide="pause"></i></button>
+                                <button id="btn-pomodoro-reset" class="btn-control reset" title="Reset"><i data-lucide="rotate-ccw"></i></button>
+                            </div>
+                        </div>
+
+                        <div id="tab-content-stopwatch" class="tab-content">
+                            <div class="stopwatch-display-container">
+                                <div class="stopwatch-digits" id="stopwatch-time">00:00:00</div>
+                                <div class="stopwatch-accumulated" id="stopwatch-hours-accumulated">Accumulated: 0.00h</div>
+                            </div>
+                            
+                            <div class="timer-controls">
+                                <button id="btn-stopwatch-play" class="btn-control play" title="Start"><i data-lucide="play"></i></button>
+                                <button id="btn-stopwatch-pause" class="btn-control pause" title="Pause" style="display:none;"><i data-lucide="pause"></i></button>
+                                <button id="btn-stopwatch-reset" class="btn-control reset" title="Reset"><i data-lucide="rotate-ccw"></i></button>
+                            </div>
+                            
+                            <p class="stopwatch-info text-center">
+                                Leave the stopwatch running while you work. It will automatically compile your hours and sync them to the database in real-time. No manual logging allowed!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="submission-suite glass-panel">
+                        <h3><i data-lucide="shield-check"></i> Automated Real-Time Tracking</h3>
+                        <p class="submission-subtitle">Time Challenger logs your work continuously. Manually overriding is disabled to ensure challenge fairness.</p>
+                        
+                        <div class="submit-slider-wrapper">
+                            <div class="slider-display">
+                                <span class="slider-time-label">Tracked Time Today:</span>
+                                <span id="submit-val-hours" class="slider-time-value text-green">0.00 hours</span>
+                            </div>
+                            <input type="range" id="submit-input-hours" min="0.0" max="20.0" step="0.01" value="0.0" class="neon-slider-large" style="pointer-events: none; opacity: 0.85;">
+                        </div>
+
+                        <div class="auto-save-badge text-center">
+                            <i data-lucide="cloud-lightning" class="pulse-icon text-green inline-block mr-1"></i>
+                            <span class="text-green font-bold">Auto-syncing to Synaptic Cloud... Logs commit automatically at midnight (00:00).</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="arena-side-column">
+                    
+                    <div class="comparison-card glass-panel" id="comparison-card">
+                        <h3><i data-lucide="bar-chart-2"></i> Live Challenge Status</h3>
+                        <div class="comparison-metrics">
+                            <div class="comp-col">
+                                <span class="comp-lbl">Active Focus</span>
+                                <span class="comp-val text-white" id="comp-actual">0.00h</span>
+                            </div>
+                            <div class="comp-versus">VS</div>
+                            <div class="comp-col">
+                                <span class="comp-lbl">AI Expects</span>
+                                <span class="comp-val text-green" id="comp-expected">-- h</span>
+                            </div>
+                        </div>
+
+                        <div class="proportional-graph-container">
+                            <div class="bar-track">
+                                <div class="bar-fill actual-fill" id="bar-fill-actual" style="width: 0%;"></div>
+                                <div class="target-marker" id="bar-target-marker" style="left: 0%;" title="AI Expectation Target">
+                                    <div class="marker-dot"></div>
+                                    <div class="marker-line"></div>
+                                </div>
+                            </div>
+                            <div class="graph-labels">
+                                <span>0h</span>
+                                <span id="graph-label-expected" style="left: 0%;">Target</span>
+                                <span>20h</span>
+                            </div>
+                        </div>
+
+                        <div class="status-verdict" id="status-verdict">
+                            Start working. The AI expectation is waiting to be beaten.
+                        </div>
+                    </div>
+
+                    <div class="tips-card glass-panel">
+                        <h3><i data-lucide="lightbulb" class="text-green"></i> Scientific Productivity Strategies</h3>
+                        <div class="tips-carousel" id="tips-container">
+                            <div class="tip-loading">Loading scientific tips...</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="results-modal" class="modal-overlay">
+        <div class="modal-content glass-panel" id="modal-box">
+            <div class="modal-icon" id="modal-icon-container">
+                <i data-lucide="trophy"></i>
+            </div>
+            <h2 id="modal-title">VICTORY!</h2>
+            <div class="modal-status-pill" id="modal-pill">--</div>
+            <p class="modal-body" id="modal-text">
+                Yesterday, you successfully beat the AI expectation by -- hours! Excellent focus. Let's start the new daily challenge.
+            </p>
+            <div class="modal-rewards">
+                <div class="reward-item">
+                    <span class="reward-label"><i data-lucide="flame" class="text-orange"></i> Streak</span>
+                    <span class="reward-value" id="modal-streak">+1 Day</span>
+                </div>
+                <div class="reward-item">
+                    <span class="reward-label"><i data-lucide="zap" class="text-yellow"></i> Rank</span>
+                    <span class="reward-value">Synaptic Pro</span>
+                </div>
+            </div>
+            <button id="btn-close-modal" class="btn-primary neon-btn btn-full">
+                <span>Close & View Dashboard</span> <i data-lucide="check"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
